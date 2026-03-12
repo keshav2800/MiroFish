@@ -129,6 +129,14 @@
 
           <!-- Next Step Buttons - 在完成后显示 -->
           <div class="next-step-buttons">
+            <button v-if="isComplete" class="next-step-btn" @click="handleExport">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>导出报告</span>
+            </button>
             <button v-if="isComplete" class="next-step-btn" @click="handleRegenerate">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 4v6h-6"></path>
@@ -402,7 +410,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, h, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAgentLog, getConsoleLog, generateReport, getReport } from '../api/report'
+import { getAgentLog, getConsoleLog, generateReport, getReport, downloadReport } from '../api/report'
 
 const router = useRouter()
 
@@ -454,6 +462,26 @@ const handleRegenerate = async () => {
     }
   } catch (err) {
     console.error('Regenerate report failed:', err)
+  }
+}
+
+// 导出报告
+const handleExport = async () => {
+  if (!props.reportId) return
+
+  try {
+    const blob = await downloadReport(props.reportId)
+    // 创建下载链接并触发下载
+    const url = window.URL.createObjectURL(new Blob([blob]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `${props.reportId}.md`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('导出报告失败:', err)
   }
 }
 
